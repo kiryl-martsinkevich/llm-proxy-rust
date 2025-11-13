@@ -19,6 +19,7 @@ mod streaming;
 
 use config::load_config;
 use proxy::ModelRouter;
+use server::{chat_completions_handler, AppState};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -45,20 +46,22 @@ async fn main() -> Result<()> {
     let router = Arc::new(ModelRouter::new(&config)?);
     tracing::info!("Model router initialized with models: {:?}", router.list_models());
 
+    // Build application state
+    let app_state = AppState {
+        router: router.clone(),
+        config: Arc::new(config.clone()),
+    };
+
     // Build application router
     let app = Router::new()
         .route("/health", get(health_check))
         .route("/models", get(list_models))
-        // TODO: Add OpenAI endpoints
-        // .route("/v1/chat/completions", post(server::openai::chat_completions))
+        .route("/v1/chat/completions", post(chat_completions_handler))
         // TODO: Add Anthropic endpoints
         // .route("/v1/messages", post(server::anthropic::messages))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
-        .with_state(AppState {
-            router: router.clone(),
-            config: Arc::new(config.clone()),
-        });
+        .with_state(app_state);
 
     // Start server
     let addr = format!("{}:{}", config.server.host, config.server.port);
@@ -68,12 +71,6 @@ async fn main() -> Result<()> {
     axum::serve(listener, app).await?;
 
     Ok(())
-}
-
-#[derive(Clone)]
-struct AppState {
-    router: Arc<ModelRouter>,
-    config: Arc<config::Config>,
 }
 
 async fn health_check() -> &'static str {

@@ -54,6 +54,9 @@ http-body-util = "0.1"
 eventsource-stream = "0.2"
 pin-project = "1.1"
 
+# Random number generation (for retry jitter)
+rand = "0.8"
+
 [dev-dependencies]
 mockito = "1.5"
 tokio-test = "0.4"

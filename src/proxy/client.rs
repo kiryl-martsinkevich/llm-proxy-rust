@@ -60,6 +60,7 @@ mod tests {
             backend_type: BackendType::OpenAI,
             endpoint: "https://api.openai.com/v1/chat/completions".to_string(),
             api_key: Some("test-key".to_string()),
+            target_model: None,
             timeout_seconds: 30,
             retry: RetryConfig::default(),
             ssl_verify,

@@ -102,24 +102,26 @@ impl JsonPathTransformer {
         if let Some((parent_path, last_key)) = Self::split_last_key(&parts) {
             let parent = Self::navigate_or_create(&mut json, &parent_path)?;
 
-            match parent {
-                Value::Object(map) => {
-                    map.insert(last_key.clone(), value.clone());
+            // Ensure parent is the right type for the last_key
+            if let Ok(index) = last_key.parse::<usize>() {
+                // Last key is an array index
+                if !parent.is_array() {
+                    *parent = Value::Array(Vec::new());
                 }
-                Value::Array(arr) => {
-                    if let Ok(index) = last_key.parse::<usize>() {
-                        // Extend array if needed
-                        while arr.len() <= index {
-                            arr.push(Value::Null);
-                        }
-                        arr[index] = value.clone();
+                if let Value::Array(arr) = parent {
+                    // Extend array if needed
+                    while arr.len() <= index {
+                        arr.push(Value::Null);
                     }
+                    arr[index] = value.clone();
                 }
-                _ => {
-                    return Err(ProxyError::Transform(format!(
-                        "Cannot add to non-object/array at path: {}",
-                        path
-                    )));
+            } else {
+                // Last key is an object key
+                if !parent.is_object() {
+                    *parent = Value::Object(serde_json::Map::new());
+                }
+                if let Value::Object(map) = parent {
+                    map.insert(last_key.clone(), value.clone());
                 }
             }
         }

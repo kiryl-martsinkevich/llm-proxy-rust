@@ -63,6 +63,10 @@ pub struct ModelConfig {
     pub endpoint: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_key: Option<String>,
+    /// Optional: The actual model name to send to the backend
+    /// If not specified, uses the key from the models map (the incoming model name)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_model: Option<String>,
     #[serde(default = "default_timeout")]
     pub timeout_seconds: u64,
     #[serde(default)]
@@ -82,6 +86,12 @@ fn default_timeout() -> u64 {
 impl ModelConfig {
     pub fn timeout_duration(&self) -> Duration {
         Duration::from_secs(self.timeout_seconds)
+    }
+
+    /// Get the target model name to send to the backend
+    /// If target_model is specified, use that; otherwise use the incoming model name
+    pub fn get_target_model<'a>(&'a self, incoming_model: &'a str) -> &'a str {
+        self.target_model.as_deref().unwrap_or(incoming_model)
     }
 }
 

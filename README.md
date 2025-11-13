@@ -141,6 +141,7 @@ models:
     backend_type: openai|anthropic|ollama
     endpoint: <backend-url>
     api_key: <api-key-or-env-var>
+    target_model: <optional-model-name>  # For model aliasing
     timeout_seconds: 60
     retry:
       max_attempts: 3
@@ -149,6 +150,57 @@ models:
     ssl_verify: true
     headers: <header-config>
     transforms: <transform-config>
+```
+
+### Model Aliasing
+
+Model aliasing allows you to route requests for one model to a different backend model. This is useful for:
+
+- **Cost optimization**: Route expensive model requests to cheaper alternatives
+- **Local development**: Route production models to local Ollama instances
+- **A/B testing**: Test different models without changing client code
+- **Provider migration**: Gradually migrate from one provider to another
+
+#### Example: Route GPT-4 to Local Ollama
+
+```yaml
+models:
+  gpt-4:
+    backend_type: ollama
+    endpoint: http://localhost:11434/api/chat
+    target_model: llama3-70b  # Incoming "gpt-4" -> backend "llama3-70b"
+    timeout_seconds: 120
+    ssl_verify: false
+```
+
+When a client sends a request with `"model": "gpt-4"`, the proxy will:
+1. Route it to the configured Ollama backend
+2. Rewrite the model field to `"model": "llama3-70b"`
+3. Send the modified request to Ollama
+
+#### Example: Route Claude to Self-Hosted Model
+
+```yaml
+models:
+  claude-3-opus:
+    backend_type: openai  # Self-hosted with OpenAI-compatible API
+    endpoint: https://self-hosted.example.com/v1/chat/completions
+    api_key: ${SELF_HOSTED_KEY}
+    target_model: nous-hermes-2-mixtral-8x7b
+    timeout_seconds: 90
+```
+
+#### Without Model Aliasing
+
+If `target_model` is not specified, the incoming model name is used as-is:
+
+```yaml
+models:
+  gpt-4-turbo:
+    backend_type: openai
+    endpoint: https://api.openai.com/v1/chat/completions
+    api_key: ${OPENAI_API_KEY}
+    # No target_model - incoming "gpt-4-turbo" -> backend "gpt-4-turbo"
 ```
 
 ### Header Manipulation
@@ -305,6 +357,7 @@ export CUSTOM_API_KEY=custom-key
 - HTTP client with SSL control
 - Retry logic with exponential backoff
 - Model-to-backend routing
+- **Model aliasing** (route incoming model names to different backend models)
 - Header manipulation (whitelist/blacklist/passthrough)
 - Regex-based content transformation
 - JSONPath operations

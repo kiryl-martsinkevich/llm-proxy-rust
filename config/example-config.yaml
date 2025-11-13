@@ -88,6 +88,46 @@ models:
       request: []
       response: []
 
+  # Model Aliasing Example: Route gpt-4 requests to Ollama's llama3-70b
+  gpt-4:
+    backend_type: ollama
+    endpoint: http://localhost:11434/api/chat
+    target_model: llama3-70b  # Incoming "gpt-4" requests will use "llama3-70b" at backend
+    timeout_seconds: 120
+    retry:
+      max_attempts: 2
+      backoff_ms: 500
+      max_backoff_ms: 5000
+    ssl_verify: false
+    headers:
+      mode: whitelist
+      force:
+        Content-Type: application/json
+    transforms:
+      request: []
+      response: []
+
+  # Model Aliasing Example: Route claude-3-opus to a self-hosted OpenAI-compatible model
+  claude-3-opus-oss:
+    backend_type: openai
+    endpoint: https://self-hosted-llm.example.com/v1/chat/completions
+    api_key: ${SELF_HOSTED_KEY}
+    target_model: nous-hermes-2-mixtral-8x7b  # Route to open-source alternative
+    timeout_seconds: 90
+    retry:
+      max_attempts: 3
+      backoff_ms: 1000
+      max_backoff_ms: 10000
+    ssl_verify: true
+    headers:
+      mode: whitelist
+      force:
+        Content-Type: application/json
+        User-Agent: LLMProxy/1.0
+    transforms:
+      request: []
+      response: []
+
   # Example: OpenAI-compatible endpoint with custom transformations
   custom-model:
     backend_type: openai

@@ -1,0 +1,123 @@
+server:
+  host: 0.0.0.0
+  port: 8080
+
+logging:
+  enabled: true
+  include_headers: true
+  include_body: true
+  level: info
+
+models:
+  # OpenAI GPT-4
+  gpt-4-turbo:
+    backend_type: openai
+    endpoint: https://api.openai.com/v1/chat/completions
+    api_key: ${OPENAI_API_KEY}
+    timeout_seconds: 60
+    retry:
+      max_attempts: 3
+      backoff_ms: 1000
+      max_backoff_ms: 10000
+    ssl_verify: true
+    headers:
+      mode: whitelist  # drop all incoming headers, use only configured ones
+      force:
+        Content-Type: application/json
+        User-Agent: LLMProxy/1.0
+      add:
+        X-Proxy-Version: 1.0.0
+      drop:
+        - X-Forwarded-For
+        - X-Real-IP
+    transforms:
+      request:
+        # Redact sensitive information
+        - type: regex
+          pattern: "\\b(password|secret|api[_-]?key)\\b"
+          replacement: "[REDACTED]"
+        # Add proxy metadata
+        - type: jsonpath_add
+          path: "$.metadata"
+          value:
+            proxy: llm-router
+            version: 1.0.0
+      response:
+        # Optional response transformations
+        []
+
+  # Anthropic Claude
+  claude-3-opus:
+    backend_type: anthropic
+    endpoint: https://api.anthropic.com/v1/messages
+    api_key: ${ANTHROPIC_API_KEY}
+    timeout_seconds: 90
+    retry:
+      max_attempts: 3
+      backoff_ms: 1000
+      max_backoff_ms: 10000
+    ssl_verify: true
+    headers:
+      mode: whitelist
+      force:
+        Content-Type: application/json
+        anthropic-version: "2023-06-01"
+      add:
+        User-Agent: LLMProxy/1.0
+    transforms:
+      request:
+        - type: regex
+          pattern: "\\b(password|secret)\\b"
+          replacement: "[REDACTED]"
+
+  # Local Ollama
+  llama2-local:
+    backend_type: ollama
+    endpoint: http://localhost:11434/api/generate
+    timeout_seconds: 120
+    retry:
+      max_attempts: 2
+      backoff_ms: 500
+      max_backoff_ms: 5000
+    ssl_verify: false  # Local endpoint, no SSL
+    headers:
+      mode: passthrough  # Keep all headers
+      force:
+        Content-Type: application/json
+    transforms:
+      request: []
+      response: []
+
+  # Example: OpenAI-compatible endpoint with custom transformations
+  custom-model:
+    backend_type: openai
+    endpoint: https://custom-api.example.com/v1/chat/completions
+    api_key: ${CUSTOM_API_KEY:-default-key}
+    timeout_seconds: 60
+    retry:
+      max_attempts: 3
+      backoff_ms: 1000
+      max_backoff_ms: 10000
+    ssl_verify: true
+    headers:
+      mode: blacklist  # Keep headers except those in drop list
+      drop:
+        - Authorization  # We'll add our own
+      force:
+        Authorization: "Bearer ${CUSTOM_API_KEY}"
+    transforms:
+      request:
+        # Remove system messages
+        - type: jsonpath_drop
+          path: "$.messages[?(@.role=='system')]"
+        # Add custom parameter
+        - type: jsonpath_add
+          path: "$.custom_param"
+          value:
+            enabled: true
+            version: 2
+      response:
+        # Redact any API keys in responses
+        - type: regex
+          pattern: "sk-[a-zA-Z0-9]{48}"
+          replacement: "sk-[REDACTED]"

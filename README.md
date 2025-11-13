@@ -263,7 +263,7 @@ Drop a block:
 ```yaml
 transforms:
   request:
-    - type: jsonpath_drop
+    - type: json_path_drop
       path: "$.messages[?(@.role=='system')]"
 ```
 
@@ -271,7 +271,7 @@ Add a block:
 ```yaml
 transforms:
   request:
-    - type: jsonpath_add
+    - type: json_path_add
       path: "$.metadata"
       value:
         proxy: llm-router

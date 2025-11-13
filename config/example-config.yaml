@@ -37,7 +37,7 @@ models:
           pattern: "\\b(password|secret|api[_-]?key)\\b"
           replacement: "[REDACTED]"
         # Add proxy metadata
-        - type: jsonpath_add
+        - type: json_path_add
           path: "$.metadata"
           value:
             proxy: llm-router
@@ -148,10 +148,10 @@ models:
     transforms:
       request:
         # Remove system messages
-        - type: jsonpath_drop
+        - type: json_path_drop
           path: "$.messages[?(@.role=='system')]"
         # Add custom parameter
-        - type: jsonpath_add
+        - type: json_path_add
           path: "$.custom_param"
           value:
             enabled: true

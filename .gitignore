@@ -19,3 +19,23 @@ target
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config files with secrets
+config/config.yaml
+config/*-local.yaml
+.env
+.env.local
+
+# Logs
+*.log
+logs/

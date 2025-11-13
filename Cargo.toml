@@ -1,0 +1,59 @@
+[package]
+name = "llm-proxy-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Web framework
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1.40", features = ["full"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.6", features = ["trace", "cors", "timeout"] }
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "stream", "rustls-tls"], default-features = false }
+hyper = { version = "1.5", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Async utilities
+async-stream = "0.3"
+futures = "0.3"
+futures-util = "0.3"
+
+# Data types
+bytes = "1.7"
+
+# String and regex processing
+regex = "1.11"
+serde-jsonpath = "0.2"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Environment variables
+dotenvy = "0.15"
+
+# HTTP types
+http = "1.1"
+http-body-util = "0.1"
+
+# Streaming
+eventsource-stream = "0.2"
+pin-project = "1.1"
+
+[dev-dependencies]
+mockito = "1.5"
+tokio-test = "0.4"

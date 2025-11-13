@@ -24,7 +24,8 @@ pub async fn chat_completions_handler(
     State(state): State<AppState>,
     headers: HeaderMap,
     Json(request): Json<ChatCompletionRequest>,
-) -> Result<Response> {
+) -> Result<impl IntoResponse> {
+        tracing::info!("Received chat completion request for model: {}", request.model);
         let model_name = &request.model.clone();
 
         // Get the client and config for this model
